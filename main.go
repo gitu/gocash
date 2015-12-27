@@ -41,7 +41,7 @@ func init() {
 	//These middleware is common to all routes
 	app.Use(negroni.NewRecovery())
 	app.Use(negroni.NewLogger())
-	app.Use(negroni.NewStatic(http.Dir("dist")))
+	app.Use(negroni.NewStatic(http.Dir(os.Getenv("CLIENT_DIR"))))
 	app.Use(NewAuth())
 	app.UseHandler(NewRoute())
 
