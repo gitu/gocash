@@ -1,9 +1,9 @@
 {
-  "name": "angular2-seed",
+  "name": "gocash",
   "version": "0.0.0",
-  "description": "Seed for Angular 2 apps",
+  "description": "Go Cash",
   "repository": {
-    "url": "https://github.com/mgechev/angular2-seed"
+    "url": "https://github.com/gitu/gocash"
   },
   "scripts": {
     "build.dev": "gulp build.dev",
@@ -24,8 +24,8 @@
     "test": "gulp test",
     "tsd": "tsd"
   },
-  "author": "Minko Gechev <mgechev>",
-  "license": "MIT",
+  "author": "Florian Schrag <gitu>",
+  "license": "GPLv3",
   "devDependencies": {
     "async": "^1.4.2",
     "chalk": "^1.1.1",
