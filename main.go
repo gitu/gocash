@@ -12,8 +12,8 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/gplus"
 
-	"./handlers"
 	"errors"
+	"github.com/gitu/cocash/handlers"
 	"github.com/gorilla/context"
 	"net/http"
 )
