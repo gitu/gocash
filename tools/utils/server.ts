@@ -23,7 +23,7 @@ export function serveSPA() {
 
   server.use(
     APP_BASE,
-    connectLivereload({port: LIVE_RELOAD_PORT}),
+    connectLivereload({ port: LIVE_RELOAD_PORT }),
     express.static(process.cwd())
   );
 
@@ -37,19 +37,19 @@ export function serveSPA() {
 export function notifyLiveReload(e) {
   let fileName = e.path;
   tinylr.changed({
-    body: {files: [fileName]}
+    body: { files: [fileName] }
   });
 }
 
 export function serveDocs() {
   let server = express();
 
-  server.use(
+   server.use(
     APP_BASE,
     serveStatic(resolve(process.cwd(), DOCS_DEST))
   );
 
-  server.listen(DOCS_PORT, () =>
+   server.listen(DOCS_PORT, () =>
     openResource('http://localhost:' + DOCS_PORT + APP_BASE)
   );
 }

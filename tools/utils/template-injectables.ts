@@ -2,13 +2,13 @@ import * as slash from 'slash';
 import {join} from 'path';
 import {APP_BASE, APP_DEST, ENV} from '../config';
 
-let injectables:string[] = [];
+let injectables: string[] = [];
 
 export function injectableAssetsRef() {
   return injectables;
 }
 
-export function registerInjectableAssetsRef(paths:string[], target:string = '') {
+export function registerInjectableAssetsRef(paths: string[], target: string = '') {
   injectables = injectables.concat(
     paths
       .filter(path => !/(\.map)$/.test(path))

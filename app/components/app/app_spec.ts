@@ -29,7 +29,7 @@ export function main() {
     ]);
 
     it('should work',
-      injectAsync([TestComponentBuilder], (tcb:TestComponentBuilder) => {
+      injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
         return tcb.overrideTemplate(TestComponent, '<div><app></app></div>')
           .createAsync(TestComponent)
           .then(rootTC => {
@@ -43,5 +43,4 @@ export function main() {
 
 @Component({selector: 'test-cmp'})
 @View({directives: [AppCmp]})
-class TestComponent {
-}
+class TestComponent {}

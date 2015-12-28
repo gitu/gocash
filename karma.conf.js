@@ -2,7 +2,7 @@
 // Generated on Wed Jul 15 2015 09:44:02 GMT+0200 (Romance Daylight Time)
 'use strict';
 
-module.exports = function (config) {
+module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -25,10 +25,10 @@ module.exports = function (config) {
       'node_modules/systemjs/dist/system.src.js',
       'node_modules/reflect-metadata/Reflect.js',
 
-      {pattern: 'node_modules/angular2/**/*.js', included: false, watched: false},
-      {pattern: 'node_modules/rxjs/**/*.js', included: false, watched: false},
-      {pattern: 'test/**/*.js', included: false, watched: true},
-      {pattern: 'node_modules/systemjs/dist/system-polyfills.js', included: false, watched: false}, // PhantomJS2 (and possibly others) might require it
+      { pattern: 'node_modules/angular2/**/*.js', included: false, watched: false },
+      { pattern: 'node_modules/rxjs/**/*.js', included: false, watched: false },
+      { pattern: 'test/**/*.js', included: false, watched: true },
+      { pattern: 'node_modules/systemjs/dist/system-polyfills.js', included: false, watched: false }, // PhantomJS2 (and possibly others) might require it
 
       'test-main.js'
     ],
@@ -42,7 +42,8 @@ module.exports = function (config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {},
+    preprocessors: {
+    },
 
 
     // test results reporter to use

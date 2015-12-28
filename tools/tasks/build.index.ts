@@ -14,14 +14,14 @@ export = function buildIndexDev(gulp, plugins) {
   };
 
 
-  function inject(name?:string) {
-    return plugins.inject(gulp.src(getInjectablesDependenciesRef(name), {read: false}), {
+  function inject(name?: string) {
+    return plugins.inject(gulp.src(getInjectablesDependenciesRef(name), { read: false }), {
       name,
       transform: transformPath(plugins, 'dev')
     });
   }
 
-  function getInjectablesDependenciesRef(name?:string) {
+  function getInjectablesDependenciesRef(name?: string) {
     return DEPENDENCIES
       .filter(dep => dep['inject'] && dep['inject'] === (name || true))
       .map(mapPath);
