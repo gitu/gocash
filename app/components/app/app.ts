@@ -18,8 +18,7 @@ import {NameList} from '../../services/name_list';
   directives: [ROUTER_DIRECTIVES]
 })
 @RouteConfig([
-  {path: '/', component: HomeCmp, as: 'Home'},
-  {path: '/about', component: AboutCmp, as: 'About'}
+  { path: '/', component: HomeCmp, as: 'Home' },
+  { path: '/about', component: AboutCmp, as: 'About' }
 ])
-export class AppCmp {
-}
+export class AppCmp {}

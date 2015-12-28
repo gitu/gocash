@@ -12,7 +12,7 @@ import {HomeCmp} from './home';
 export function main() {
   describe('Home component', () => {
     it('should work',
-      injectAsync([TestComponentBuilder], (tcb:TestComponentBuilder) => {
+      injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
         return tcb.overrideTemplate(TestComponent, '<div><home></home></div>')
           .createAsync(TestComponent)
           .then((rootTC) => {
@@ -26,5 +26,4 @@ export function main() {
 
 @Component({selector: 'test-cmp'})
 @View({directives: [HomeCmp]})
-class TestComponent {
-}
+class TestComponent {}

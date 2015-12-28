@@ -13,7 +13,7 @@ import {NameList} from '../../services/name_list';
 export function main() {
   describe('About component', () => {
     it('should work',
-      injectAsync([TestComponentBuilder], (tcb:TestComponentBuilder) => {
+      injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
         return tcb.overrideTemplate(TestComponent, '<div><about></about></div>')
           .createAsync(TestComponent)
           .then((rootTC) => {
@@ -43,5 +43,4 @@ export function main() {
 
 @Component({providers: [NameList], selector: 'test-cmp'})
 @View({directives: [AboutCmp]})
-class TestComponent {
-}
+class TestComponent {}
