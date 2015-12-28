@@ -13,7 +13,7 @@ import (
 	"github.com/markbates/goth/providers/gplus"
 
 	"errors"
-	"github.com/gitu/cocash/backend/handlers"
+	"github.com/gitu/gocash/backend/handlers"
 	"github.com/gorilla/context"
 	"net/http"
 )
