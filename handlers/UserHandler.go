@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gorilla/context"
-	"gopkg.in/unrolled/render.v1"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/gorilla/context"
+	"github.com/gitu/gocash/Godeps/_workspace/src/gopkg.in/unrolled/render.v1"
 	"log"
 )
 

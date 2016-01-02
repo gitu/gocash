@@ -4,17 +4,17 @@ import (
 	"log"
 	"os"
 
-	"github.com/codegangsta/negroni"
-	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
-	"github.com/joho/godotenv"
-	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/gplus"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/codegangsta/negroni"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/gorilla/mux"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/gorilla/sessions"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/joho/godotenv"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/markbates/goth"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/markbates/goth/gothic"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/markbates/goth/providers/gplus"
 
 	"errors"
-	"github.com/gitu/gocash/backend/handlers"
-	"github.com/gorilla/context"
+	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/gorilla/context"
+	"github.com/gitu/gocash/handlers"
 	"net/http"
 )
 
