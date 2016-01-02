@@ -18,7 +18,7 @@
     "lint": "gulp tslint",
     "postinstall": "tsd reinstall --clean && tsd link && tsd rebundle && gulp check.versions && gulp postinstall",
     "reinstall": "rimraf node_modules && npm cache clean && npm install",
-    "start": "gulp serve --env dev",
+    "start": "gulp serve --env dev & CompileDaemon -directory=\"./backend\" --command \"backend/backend\"",
     "serve.dev": "gulp serve --env dev",
     "tasks.list": "gulp --tasks-simple",
     "test": "gulp test",
