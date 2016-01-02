@@ -21,7 +21,6 @@ before_install:
   - node -v
 
 install:
-  - go get -t -v ./backend/...
   - npm install
 script:
   - go test -v ./backend/...

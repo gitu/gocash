@@ -67,5 +67,5 @@ docs
 lib
 test
 tools/typings/tsd
-/backend/backend
 tmp
+nohup.out
