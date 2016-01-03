@@ -20,7 +20,7 @@
     "karma": "karma",
     "karma.start": "karma start",
     "lint": "gulp tslint",
-    "postinstall": "ls node_modules && ls node_modules/.bin && ls .heroku/node/bin && echo $PATH && tsd reinstall --clean && tsd link && tsd rebundle && gulp check.versions && gulp postinstall",
+    "postinstall": "ls -a node_modules && ls node_modules/.bin && ls .heroku/node/bin && echo $PATH && tsd reinstall --clean && tsd link && tsd rebundle && gulp check.versions && gulp postinstall",
     "reinstall": "rimraf node_modules && npm cache clean && npm install",
     "start": "gulp serve --env dev & CompileDaemon -directory=\"./backend\" --command \"backend/backend\"",
     "serve.dev": "gulp serve --env dev",
