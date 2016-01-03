@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/gitu/gocash/Godeps/_workspace/src/github.com/codegangsta/negroni"
+	"github.com/codegangsta/negroni"
 	"log"
 	"net/http"
 	"os"
