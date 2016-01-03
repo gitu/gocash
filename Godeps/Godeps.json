@@ -2,7 +2,8 @@
 	"ImportPath": "github.com/gitu/gocash",
 	"GoVersion": "go1.5",
 	"Packages": [
-		"./..."
+		"."
+   ,"./handlers"
 	],
 	"Deps": [
 		{
@@ -34,10 +35,6 @@
 		{
 			"ImportPath": "github.com/markbates/goth",
 			"Rev": "8b2e76183de9c476e23abffdd799742aebc59c79"
-		},
-		{
-			"ImportPath": "github.com/minimaxir/big-list-of-naughty-strings/naughtystrings/internal",
-			"Rev": "08d02f76a38bbf8ecc3e5f9c44c1b0c2a608ea5c"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
