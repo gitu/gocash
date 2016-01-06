@@ -1,0 +1,21 @@
+<div class="container">
+  <form class="form-signin" [ngFormModel]="loginForm" (submit)="doLogin($event)">
+
+    <h2 class="form-signin-heading">Please sign in</h2>
+
+
+    <fieldset class="form-group">
+      <label for="inputUser">Username</label>
+      <input ngControl="user" type="text" class="form-control" id="inputUser" placeholder="Username">
+    </fieldset>
+    <fieldset class="form-group">
+      <label for="inputPassword">Password</label>
+      <input ngControl="password" type="password" class="form-control" id="inputPassword" placeholder="Password">
+    </fieldset>
+    <button type="submit" class="btn btn-primary btn-block">Submit</button>
+  </form>
+
+</div>
+
+
+

@@ -16,7 +16,10 @@ export function serveSPA() {
 
 
   proxy.get('/api/*').forward('http://localhost:' + BACKEND_PORT);
-  proxy.get('/auth/*').forward('http://localhost:' + BACKEND_PORT);
+  proxy.post('/api/*').forward('http://localhost:' + BACKEND_PORT);
+  proxy.put('/api/*').forward('http://localhost:' + BACKEND_PORT);
+  proxy.delete('/api/*').forward('http://localhost:' + BACKEND_PORT);
+  proxy.post('/auth').forward('http://localhost:' + BACKEND_PORT);
 
 
   proxy.get('/').redirect(APP_BASE + APP_DEST);
