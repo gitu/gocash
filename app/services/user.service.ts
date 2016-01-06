@@ -1,15 +1,15 @@
 import {Injectable} from 'angular2/core';
-import {Http} from 'angular2/http';
 import {Response} from 'angular2/http';
 import 'rxjs/add/operator/map';
+import {AuthHttp} from 'angular2-jwt/angular2-jwt';
 
 
 @Injectable()
 export class UserService {
 
-  constructor(private http:Http) {  }
+  constructor(private authHttp:AuthHttp) {  }
 
   getUser() {
-    return this.http.get('/api/user').map((res: Response) => res.json());
+    return this.authHttp.get('/api/user').map((res: Response) => res.json());
   }
 }

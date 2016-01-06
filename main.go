@@ -5,20 +5,17 @@ import (
 	"os"
 
 	"github.com/codegangsta/negroni"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
-	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/gplus"
 
-	"errors"
+	"encoding/json"
+	"fmt"
 	"github.com/gitu/gocash/handlers"
 	"github.com/gorilla/context"
 	"net/http"
+	"time"
 )
-
-var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
 
 var app = negroni.New()
 
@@ -28,21 +25,10 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 
-	if os.Getenv("SESSION_SECRET") == "" {
-		log.Fatal("No SESSION_SECRET set!")
-	}
-	gothic.Store = store
-
-	goth.UseProviders(
-		gplus.New(os.Getenv("GPLUS_KEY"), os.Getenv("GPLUS_SECRET"), os.Getenv("SERVER_URL")+"/auth/gplus/callback"),
-	)
-	gothic.GetProviderName = getProviderName
-
 	//These middleware is common to all routes
 	app.Use(negroni.NewRecovery())
 	app.Use(negroni.NewLogger())
 	app.Use(negroni.NewStatic(http.Dir(os.Getenv("CLIENT_DIR"))))
-	app.Use(NewAuth())
 	app.UseHandler(NewRoute())
 
 }
@@ -54,61 +40,64 @@ func main() {
 func NewRoute() *mux.Router {
 
 	mainRouter := mux.NewRouter().StrictSlash(true)
+	mainRouter.HandleFunc("/auth", Authenticate)
 
 	apiRoutes := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
-	apiNegroni := negroni.New(NewUserRequired(), negroni.Wrap(apiRoutes))
+	apiNegroni := negroni.New(NewAuth(), negroni.Wrap(apiRoutes))
 
 	mainRouter.PathPrefix("/api").Handler(apiNegroni)
-	mainRouter.HandleFunc("/auth/{provider}/callback", CallbackHandler)
-	mainRouter.HandleFunc("/auth/{provider}", gothic.BeginAuthHandler)
-	mainRouter.HandleFunc("/logout", LogoutHandler)
-
 	apiRoutes.HandleFunc("/user", handlers.UserHandler)
 
 	return mainRouter
 }
 
-func getProviderName(req *http.Request) (string, error) {
-	provider := mux.Vars(req)["provider"]
-	if provider == "" {
-		return provider, errors.New("you must select a provider")
-	}
-	return provider, nil
+// User model
+type User struct {
+	UserId   string `form:"userid" json:"userid" binding:"required"`
+	Password string `form:"password" json:"password" binding:"required"`
 }
 
-func CallbackHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := gothic.CompleteUserAuth(w, r)
-
+func Authenticate(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var user User
+	err := decoder.Decode(&user)
 	if err != nil {
-		log.Fatalln(w, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	session, err := store.Get(r, "auth")
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
+	if user.UserId == "asdf" && user.Password == "asdf" {
+
+		// Create JWT token
+		token := jwt.New(jwt.SigningMethodHS512)
+		token.Claims["userid"] = user.UserId
+		token.Claims["iat"] = time.Now().Unix()
+		token.Claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+		token.Claims["nbf"] = time.Now().Unix()
+		tokenString, err := token.SignedString([]byte(os.Getenv("TOKEN_SECRET")))
+		if err != nil {
+			log.Printf("Error while generating token: %v", err.Error())
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		data := map[string]string{
+			"token": tokenString,
+		}
+
+		js, err := json.Marshal(data)
+		if err != nil {
+			log.Printf("Error while unmarshalling: %v", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	} else {
+		log.Printf("Unsuccessful Login for user %v", user.UserId)
+		http.Error(w, "MEEP MEEP", http.StatusUnauthorized)
 	}
-
-	session.Values["user"] = user
-
-	session.Save(r, w)
-
-	http.Redirect(w, r, "/", 302)
-}
-
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, err := store.Get(r, "auth")
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	session.Options.MaxAge = -1
-
-	session.Save(r, w)
-
-	http.Redirect(w, r, "/", 302)
 }
 
 type Auth struct {
@@ -119,31 +108,18 @@ func NewAuth() *Auth {
 }
 
 func (l *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	session, err := store.Get(r, "auth")
-	if err != nil {
-		http.Error(rw, err.Error(), 500)
-		return
+	token, err := jwt.ParseFromRequest(r, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("TOKEN_SECRET")), nil
+	})
+	if err == nil && token.Valid {
+		context.Set(r, "user", token.Claims["userid"])
+		next(rw, r)
+	} else {
+		log.Printf("Error while parsing token: %v", err.Error())
+		http.Error(rw, err.Error(), http.StatusUnauthorized)
 	}
-
-	user := session.Values["user"]
-	if user != nil {
-		context.Set(r, "user", user)
-	}
-	next(rw, r)
-}
-
-type UserRequired struct {
-}
-
-func NewUserRequired() *UserRequired {
-	return &UserRequired{}
-}
-
-func (l *UserRequired) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	user := context.Get(r, "user")
-	if user == nil {
-		http.Error(rw, "Unauthorized", 401)
-		return
-	}
-	next(rw, r)
 }

@@ -3,25 +3,28 @@ import {
   RouteConfig,
   ROUTER_DIRECTIVES
 } from 'angular2/router';
-import {HTTP_PROVIDERS} from 'angular2/http';
+import {tokenNotExpired} from 'angular2-jwt/angular2-jwt';
+import {Router} from 'angular2/router';
 
 import {HomeCmp} from '../home/home';
-import {AboutCmp} from '../about/about';
-import {NameList} from '../../services/name_list';
-//import {UserService} from '../../services/user.service';
-import {UserIconCmp} from '../user/userIcon';
+import {LoginCmp} from '../user/login';
 
 @Component({
   selector: 'app',
-  bindings: [HTTP_PROVIDERS],
-  viewProviders: [NameList],
   templateUrl: './components/app/app.html',
   styleUrls: ['./components/app/app.css'],
   encapsulation: ViewEncapsulation.None,
-  directives: [ROUTER_DIRECTIVES,UserIconCmp]
+  directives: [ROUTER_DIRECTIVES]
 })
 @RouteConfig([
-  { path: '/', component: HomeCmp, as: 'Home' },
-  { path: '/about', component: AboutCmp, as: 'About' }
+  {path: '/m/...', component: HomeCmp, as: 'Main'},
+  {path: '/login', component: LoginCmp, as: 'Login'},
+  {path: '/',      redirectTo: ['/Main/Home']}
 ])
-export class AppCmp {}
+export class AppCmp {
+  constructor(private router:Router) {
+    if (!tokenNotExpired()) {
+      this.router.navigateByUrl('/login');
+    }
+  }
+}

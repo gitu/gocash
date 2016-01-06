@@ -1,20 +1,22 @@
 import {Component} from 'angular2/core';
 import {UserService} from '../../services/user.service';
+import {tokenNotExpired} from 'angular2-jwt/angular2-jwt';
 
 @Component({
   selector: 'user-icon',
   viewProviders: [UserService],
-  templateUrl: './components/user/userIcon.html',
-  styleUrls: ['./components/user/userIcon.css']
+  template: '<pre>{{ user }}</pre>'
 })
 export class UserIconCmp {
   user;
   constructor(private userService: UserService) {  }
 
   ngOnInit() {
-    this.userService.getUser()
-      .subscribe((user:any) => {
-        this.user = user;
-      });
+    if (tokenNotExpired()) {
+      this.userService.getUser()
+        .subscribe((user:any) => {
+          this.user = user;
+        });
+    }
   }
 }
