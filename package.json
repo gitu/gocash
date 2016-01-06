@@ -29,7 +29,7 @@
     "tsd": "tsd"
   },
   "author": "Florian Schrag <gitu>",
-  "license": "GPL3",
+  "license": "GPL-3.0",
   "devDependencies": {
     "async": "^1.4.2",
     "chalk": "^1.1.1",
