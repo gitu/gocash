@@ -88,6 +88,7 @@ export const SYSTEM_CONFIG_BUILDER = {
   paths: {
     '*': `${TMP_DIR}/*`,
     'angular2/*': 'node_modules/angular2/*',
+    'angular2-jwt/*': 'node_modules/angular2-jwt/*',
     'rxjs/*': 'node_modules/rxjs/*'
   }
 };
