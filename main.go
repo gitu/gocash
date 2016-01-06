@@ -22,7 +22,7 @@ var app = negroni.New()
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 
 	//These middleware is common to all routes
