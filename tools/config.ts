@@ -1,9 +1,11 @@
 import {readFileSync} from 'fs';
 import {argv} from 'yargs';
+import {normalize, join} from 'path';
 
 
 // --------------
 // Configuration.
+export const PROJECT_ROOT         = normalize(join(__dirname, '..'));
 export const ENV                  = argv['env']         || 'dev';
 export const DEBUG                = argv['debug']       || false;
 export const PORT                 = argv['port']        || 5555;
@@ -12,6 +14,10 @@ export const LIVE_RELOAD_PORT     = argv['reload-port'] || 4002;
 export const DOCS_PORT            = argv['docs-port']   || 4003;
 export const APP_BASE             = argv['base']        || '/';
 
+export const ENABLE_HOT_LOADING   = !!argv['hot-loader'];
+export const HOT_LOADER_PORT      = 5578;
+
+export const BOOTSTRAP_MODULE     = ENABLE_HOT_LOADING ? 'hot_loader_bootstrap' : 'bootstrap';
 export const APP_TITLE            = 'Go Cash';
 
 export const APP_SRC              = 'app';
@@ -45,7 +51,7 @@ export const NPM_DEPENDENCIES = [
   // Faster dev page load
   { src: 'rxjs/bundles/Rx.min.js', inject: 'libs', dest: LIB_DEST },
   { src: 'angular2/bundles/angular2.min.js', inject: 'libs', dest: LIB_DEST },
-  { src: 'angular2/bundles/router.js', inject: 'libs', dest: LIB_DEST }, // use router.min.js with alpha47
+  { src: 'angular2/bundles/router.min.js', inject: 'libs', dest: LIB_DEST },
   { src: 'angular2/bundles/http.min.js', inject: 'libs', dest: LIB_DEST },
 
   { src: 'bootstrap/dist/css/bootstrap.min.css', inject: true, dest: CSS_DEST }
@@ -69,6 +75,7 @@ const SYSTEM_CONFIG_DEV = {
   defaultJSExtensions: true,
   paths: {
     'bootstrap': `${APP_ROOT}bootstrap`,
+    'hot_loader_bootstrap': `${APP_ROOT}hot_loader_bootstrap`,
     '*': `${APP_BASE}node_modules/*`
   }
 };
