@@ -31,6 +31,7 @@ before_install:
   - npm -v
   - node -v
   - go get github.com/tools/godep
+  - go get bitbucket.org/liamstask/goose/cmd/goose
 
 install:
   - npm install
