@@ -14,5 +14,13 @@
   "addons": [
     "papertrail",
     "heroku-postgresql"
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/gitu/heroku-buildpack-go"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
   ]
 }
