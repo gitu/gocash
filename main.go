@@ -15,15 +15,43 @@ import (
 	"github.com/gorilla/context"
 	"net/http"
 	"time"
+
+	"github.com/gitu/gocash/Godeps/_workspace/src/golang.org/x/crypto/bcrypt"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 var app = negroni.New()
+
+var db *sqlx.DB
+
+type User struct {
+	Id           int64  `json:"id" db:"id"`
+	UserName     string `json:"userName" db:"user_name"`
+	Password     string `json:"password,omitempty" `
+	PasswordHash []byte `json:"-" db:"password_hash"`
+	FullName     string `json:"fullName" db:"full_name"`
+	IsEnabled    bool   `json:"isEnabled" db:"is_enabled"`
+}
 
 func init() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
+
+	db, err = sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Printf("error [%v] while connecting with url [%v]", err, os.Getenv("DATABASE_URL"))
+		log.Fatalln(err)
+	}
+
+	genpw, err := bcrypt.GenerateFromPassword([]byte("asdf"), 15)
+	if err != nil {
+		log.Printf("Error generating password")
+	}
+
+	db.MustExec("INSERT INTO users (user_name, full_name, password_hash, is_enabled) select $1, $2, $3, $4 where NOT EXISTS (select id from users where user_name=$1)", "asdf", "asdf", genpw, true)
 
 	//These middleware is common to all routes
 	app.Use(negroni.NewRecovery())
@@ -51,12 +79,6 @@ func NewRoute() *mux.Router {
 	return mainRouter
 }
 
-// User model
-type User struct {
-	UserId   string `form:"userid" json:"userid" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
-}
-
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var user User
@@ -66,11 +88,19 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.UserId == "asdf" && user.Password == "asdf" {
+	dbUser := User{}
+	err = db.Get(&dbUser, "SELECT * FROM users WHERE user_name=$1", user.UserName)
+	if err != nil {
+		log.Printf("Unsuccessful Login for user %v does not exists: %v", user.UserName, err)
+		http.Error(w, "MEEP MEEP", http.StatusUnauthorized)
+		return
+	}
 
+	if bcrypt.CompareHashAndPassword(dbUser.PasswordHash, []byte(user.Password)) == nil {
 		// Create JWT token
 		token := jwt.New(jwt.SigningMethodHS512)
-		token.Claims["userid"] = user.UserId
+		token.Claims["user_id"] = dbUser.Id
+		token.Claims["user_name"] = dbUser.UserName
 		token.Claims["iat"] = time.Now().Unix()
 		token.Claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
 		token.Claims["nbf"] = time.Now().Unix()
@@ -95,7 +125,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
 	} else {
-		log.Printf("Unsuccessful Login for user %v", user.UserId)
+		log.Printf("Unsuccessful Login for user %v", user.UserName)
 		http.Error(w, "MEEP MEEP", http.StatusUnauthorized)
 	}
 }
@@ -116,8 +146,15 @@ func (l *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.Hand
 		return []byte(os.Getenv("TOKEN_SECRET")), nil
 	})
 	if err == nil && token.Valid {
-		context.Set(r, "user", token.Claims["userid"])
-		next(rw, r)
+		dbUser := User{}
+		err = db.Get(&dbUser, "SELECT * FROM users WHERE id=$1", token.Claims["user_id"])
+		if err == nil && dbUser.IsEnabled {
+			context.Set(r, "user", dbUser)
+			next(rw, r)
+		} else {
+			log.Printf("Claims: %v", token.Claims)
+			http.Error(rw, err.Error(), http.StatusUnauthorized)
+		}
 	} else {
 		log.Printf("Error while parsing token: %v", err.Error())
 		http.Error(rw, err.Error(), http.StatusUnauthorized)

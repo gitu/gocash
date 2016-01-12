@@ -6,6 +6,16 @@ nodejs:
   - '4.1'
   - '5.3'
 
+addons:
+ postgresql: "9.4"
+
+services:
+  - postgresql
+
+
+before_script:
+  - psql -c 'create database gocash;' -U postgres
+
 sudo: false
 services:
 before_install:
@@ -20,12 +30,17 @@ before_install:
   - nvm use stable
   - npm -v
   - node -v
+  - go get github.com/tools/godep
 
 install:
   - npm install
+  - godep restore
 script:
+  - goose status
+  - goose up && goose down && goose up
+  - goose status
   - go test -v .
-  - go test -v ./handlers/...
+  - go test -v ./handlers
   - npm test
   - npm run-script build.prod
 notifications:
@@ -33,8 +48,6 @@ notifications:
 after_failure: cat /home/travis/build/gitu/gocash/npm-debug.log
 env:
   global:
-  # https://github.com/DefinitelyTyped/tsd#tsdrc
-  # Token has no scope (read-only access to public information)
   - TSD_GITHUB_TOKEN=9b18c72997769f3867ef2ec470e626d39661795d
 
 cache:
