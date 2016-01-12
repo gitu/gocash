@@ -16,9 +16,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gitu/gocash/Godeps/_workspace/src/golang.org/x/crypto/bcrypt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var app = negroni.New()
