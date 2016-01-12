@@ -1,0 +1,18 @@
+{
+  "name": "gocash",
+  "description": "",
+  "scripts": {
+    "postdeploy": "goose up"
+  },
+  "env": {
+    "CLIENT_DIR": "dist/prod",
+    "NPM_CONFIG_PRODUCTION": "false",
+    "TOKEN_SECRET": {
+      "generator": "secret"
+    }
+  },
+  "addons": [
+    "papertrail",
+    "heroku-postgresql"
+  ]
+}
