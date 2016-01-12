@@ -15,7 +15,7 @@ export class AuthService {
     var observable = Observable.create(
       (observer) =>
         this.http
-          .post('/auth', JSON.stringify({'userid': userid, 'password': password}))
+          .post('/auth', JSON.stringify({'userName': userid, 'password': password}))
           .map((res:Response) => res.json())
           .subscribe(
             (resp)=> {
