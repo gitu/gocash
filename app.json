@@ -2,7 +2,7 @@
   "name": "gocash",
   "description": "",
   "scripts": {
-    "postdeploy": "goose up"
+    "postdeploy": "goose --env production up"
   },
   "env": {
     "CLIENT_DIR": "dist/prod",
