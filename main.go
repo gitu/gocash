@@ -197,7 +197,9 @@ func SetupDatabase(w http.ResponseWriter, r *http.Request) {
 			if encErr != nil {
 				log.Printf("Error generating password")
 			}
+			t := db.MustBegin()
 			db.MustExec("INSERT INTO users (user_name, full_name, password_hash, is_enabled) select $1, $2, $3, $4 where NOT EXISTS (select id from users where user_name=$1)", r.PostFormValue("user_name"), r.PostFormValue("full_name"), encryptedPassword, true)
+			t.Commit()
 		}
 
 		dbVersionPost, err := goose.GetDBVersion(conf)
@@ -207,23 +209,24 @@ func SetupDatabase(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Error(w, fmt.Sprintf("Successfully updated from %v to %v", dbVersionPre, dbVersionPost), http.StatusOK)
+		fmt.Fprintf(w, "Successfully updated from %v to %v", dbVersionPre, dbVersionPost)
 	} else {
-		if target == dbVersionPre {
-			http.Error(w, fmt.Sprintf("All Up to Date!"), http.StatusOK)
+
+		addVal := ""
+		_, userErr := db.Query("select id from users")
+		if userErr != nil {
+			addVal = "User name: <input type='text' name='user_name'><br>" +
+				"Password: <input type='text' name='password'><br>" +
+				"Full Name: <input type='text' name='full_name'><br>"
+		}
+
+		if target == dbVersionPre && userErr == nil {
+			fmt.Fprintf(w, "All Up to Date!")
 		} else {
 
-			addVal := ""
-			_, userErr := db.Query("select id from users")
-			if userErr != nil {
-				addVal = "User name: <input type='text' name='user_name'><br>" +
-					"Password: <input type='text' name='password'><br>" +
-					"Full Name: <input type='text' name='full_name'><br>"
-			}
-
-			http.Error(w, fmt.Sprintf("<html><body>Upgrade from %v to %v <br/><form action='/setup' method='post'>"+
+			fmt.Fprintf(w, "<html><body>Upgrade from %v to %v <br/><form action='/setup' method='post'>"+
 				"%v"+
-				"<input type='submit' value='upgrade'></form></body></html>", dbVersionPre, target, addVal), http.StatusOK)
+				"<input type='submit' value='upgrade'></form></body></html>", dbVersionPre, target, addVal)
 		}
 	}
 }
