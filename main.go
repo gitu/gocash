@@ -24,6 +24,8 @@ import (
 
 var app = negroni.New()
 
+var db *sqlx.DB
+
 func getDb() (*sqlx.DB, error) {
 	db, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -53,6 +55,7 @@ func init() {
 	app.Use(negroni.NewStatic(http.Dir(os.Getenv("CLIENT_DIR"))))
 	app.UseHandler(NewRoute())
 
+	db, _ = getDb()
 }
 
 func main() {
@@ -82,8 +85,6 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	db, _ := getDb()
 
 	dbUser := User{}
 	err = db.Get(&dbUser, "SELECT * FROM users WHERE user_name=$1", user.UserName)
@@ -143,7 +144,6 @@ func (l *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.Hand
 		return []byte(os.Getenv("TOKEN_SECRET")), nil
 	})
 	if err == nil && token.Valid {
-		db, _ := getDb()
 		dbUser := User{}
 		err = db.Get(&dbUser, "SELECT * FROM users WHERE id=$1", token.Claims["user_id"])
 		if err == nil && dbUser.IsEnabled {
@@ -160,9 +160,6 @@ func (l *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.Hand
 }
 
 func SetupDatabase(w http.ResponseWriter, r *http.Request) {
-
-	db, _ := getDb()
-
 	conf, err := goose.NewDBConf(os.Getenv("DB_CONF"), os.Getenv("DB_CONF_ENV"), os.Getenv("DB_CONF_SCHEMA"))
 	if err != nil {
 		log.Printf("error while getting config: %v", err.Error())
