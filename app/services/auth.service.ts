@@ -11,11 +11,11 @@ export class AuthService {
   constructor(private http:Http) {
   }
 
-  login(userid, password):Observable<String> {
+  login(userName, password):Observable<String> {
     var observable = Observable.create(
       (observer) =>
         this.http
-          .post('/auth', JSON.stringify({'userName': userid, 'password': password}))
+          .post('/auth', JSON.stringify({'userName': userName, 'password': password}))
           .map((res:Response) => res.json())
           .subscribe(
             (resp)=> {

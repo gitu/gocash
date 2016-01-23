@@ -184,6 +184,9 @@ func SetupDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	users, userErr := db.Query("select id from users limit 1")
+	userExists := userErr == nil && users.Next()
+
 	if r.Method == "POST" {
 		if err := goose.RunMigrations(conf, conf.MigrationsDir, target); err != nil {
 			log.Printf("error while running migrations: %v", err.Error())
@@ -191,8 +194,7 @@ func SetupDatabase(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, userErr := db.Query("select id from users")
-		if userErr != nil {
+		if !userExists {
 			encryptedPassword, encErr := bcrypt.GenerateFromPassword([]byte(r.PostFormValue("password")), 15)
 			if encErr != nil {
 				log.Printf("Error generating password")
@@ -214,14 +216,13 @@ func SetupDatabase(w http.ResponseWriter, r *http.Request) {
 	} else {
 
 		addVal := ""
-		_, userErr := db.Query("select id from users")
-		if userErr != nil {
+		if !userExists {
 			addVal = "User name: <input type='text' name='user_name'><br>" +
 				"Password: <input type='text' name='password'><br>" +
 				"Full Name: <input type='text' name='full_name'><br>"
 		}
 
-		if target == dbVersionPre && userErr == nil {
+		if target == dbVersionPre && userExists {
 			fmt.Fprintf(w, "All Up to Date!")
 		} else {
 			fmt.Fprintf(w, "<html><body>Upgrade from %v to %v <br/><form action='/setup' method='post'>"+
