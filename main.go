@@ -197,6 +197,7 @@ func SetupDatabase(w http.ResponseWriter, r *http.Request) {
 			if encErr != nil {
 				log.Printf("Error generating password")
 			}
+			log.Printf("Creating new user: %v - %v", r.PostFormValue("user_name"), r.PostFormValue("full_name"))
 			t := db.MustBegin()
 			db.MustExec("INSERT INTO users (user_name, full_name, password_hash, is_enabled) select $1, $2, $3, $4 where NOT EXISTS (select id from users where user_name=$1)", r.PostFormValue("user_name"), r.PostFormValue("full_name"), encryptedPassword, true)
 			t.Commit()
@@ -223,7 +224,6 @@ func SetupDatabase(w http.ResponseWriter, r *http.Request) {
 		if target == dbVersionPre && userErr == nil {
 			fmt.Fprintf(w, "All Up to Date!")
 		} else {
-
 			fmt.Fprintf(w, "<html><body>Upgrade from %v to %v <br/><form action='/setup' method='post'>"+
 				"%v"+
 				"<input type='submit' value='upgrade'></form></body></html>", dbVersionPre, target, addVal)
