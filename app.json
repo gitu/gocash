@@ -5,6 +5,8 @@
     "postdeploy": "goose --env production up"
   },
   "env": {
+    "DB_CONF": "db",
+    "DB_CONF_ENV": "production",
     "CLIENT_DIR": "dist/prod",
     "NPM_CONFIG_PRODUCTION": "false",
     "TOKEN_SECRET": {

@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"time"
 
+	"bitbucket.org/liamstask/goose/lib/goose"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -23,7 +24,13 @@ import (
 
 var app = negroni.New()
 
-var db *sqlx.DB
+func getDb() (*sqlx.DB, error) {
+	db, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Printf("error [%v] while connecting with url [%v]", err, os.Getenv("DATABASE_URL"))
+	}
+	return db, err
+}
 
 type User struct {
 	Id           int64  `json:"id" db:"id"`
@@ -39,19 +46,6 @@ func init() {
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
-
-	db, err = sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Printf("error [%v] while connecting with url [%v]", err, os.Getenv("DATABASE_URL"))
-		log.Fatalln(err)
-	}
-
-	genpw, err := bcrypt.GenerateFromPassword([]byte("asdf"), 15)
-	if err != nil {
-		log.Printf("Error generating password")
-	}
-
-	db.MustExec("INSERT INTO users (user_name, full_name, password_hash, is_enabled) select $1, $2, $3, $4 where NOT EXISTS (select id from users where user_name=$1)", "asdf", "asdf", genpw, true)
 
 	//These middleware is common to all routes
 	app.Use(negroni.NewRecovery())
@@ -69,6 +63,7 @@ func NewRoute() *mux.Router {
 
 	mainRouter := mux.NewRouter().StrictSlash(true)
 	mainRouter.HandleFunc("/auth", Authenticate)
+	mainRouter.HandleFunc("/setup", SetupDatabase)
 
 	apiRoutes := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
 	apiNegroni := negroni.New(NewAuth(), negroni.Wrap(apiRoutes))
@@ -87,6 +82,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	db, _ := getDb()
 
 	dbUser := User{}
 	err = db.Get(&dbUser, "SELECT * FROM users WHERE user_name=$1", user.UserName)
@@ -146,6 +143,7 @@ func (l *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.Hand
 		return []byte(os.Getenv("TOKEN_SECRET")), nil
 	})
 	if err == nil && token.Valid {
+		db, _ := getDb()
 		dbUser := User{}
 		err = db.Get(&dbUser, "SELECT * FROM users WHERE id=$1", token.Claims["user_id"])
 		if err == nil && dbUser.IsEnabled {
@@ -158,5 +156,74 @@ func (l *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.Hand
 	} else {
 		log.Printf("Error while parsing token: %v", err.Error())
 		http.Error(rw, err.Error(), http.StatusUnauthorized)
+	}
+}
+
+func SetupDatabase(w http.ResponseWriter, r *http.Request) {
+
+	db, _ := getDb()
+
+	conf, err := goose.NewDBConf(os.Getenv("DB_CONF"), os.Getenv("DB_CONF_ENV"), os.Getenv("DB_CONF_SCHEMA"))
+	if err != nil {
+		log.Printf("error while getting config: %v", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	dbVersionPre, err := goose.GetDBVersion(conf)
+	if err != nil {
+		log.Printf("error while getting last version from db: %v", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	target, err := goose.GetMostRecentDBVersion(conf.MigrationsDir)
+	if err != nil {
+		log.Printf("error while getting last version: %v", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if r.Method == "POST" {
+		if err := goose.RunMigrations(conf, conf.MigrationsDir, target); err != nil {
+			log.Printf("error while running migrations: %v", err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		_, userErr := db.Query("select id from users")
+		if userErr != nil {
+			encryptedPassword, encErr := bcrypt.GenerateFromPassword([]byte(r.PostFormValue("password")), 15)
+			if encErr != nil {
+				log.Printf("Error generating password")
+			}
+			db.MustExec("INSERT INTO users (user_name, full_name, password_hash, is_enabled) select $1, $2, $3, $4 where NOT EXISTS (select id from users where user_name=$1)", r.PostFormValue("user_name"), r.PostFormValue("full_name"), encryptedPassword, true)
+		}
+
+		dbVersionPost, err := goose.GetDBVersion(conf)
+		if err != nil {
+			log.Printf("error while getting last version from db: %v", err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.Error(w, fmt.Sprintf("Successfully updated from %v to %v", dbVersionPre, dbVersionPost), http.StatusOK)
+	} else {
+		if target == dbVersionPre {
+			http.Error(w, fmt.Sprintf("All Up to Date!"), http.StatusOK)
+		} else {
+
+			addVal := ""
+			_, userErr := db.Query("select id from users")
+			if userErr != nil {
+				addVal = "User name: <input type='text' name='user_name'><br>" +
+					"Password: <input type='text' name='password'><br>" +
+					"Full Name: <input type='text' name='full_name'><br>"
+			}
+
+			http.Error(w, fmt.Sprintf("<html><body>Upgrade from %v to %v <br/><form action='/setup' method='post'>"+
+				"%v"+
+				"<input type='submit' value='upgrade'></form></body></html>", dbVersionPre, target, addVal), http.StatusOK)
+		}
 	}
 }
