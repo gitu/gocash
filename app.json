@@ -1,9 +1,8 @@
 {
   "name": "gocash",
-  "description": "",
-  "scripts": {
-    "postdeploy": "goose --env production up"
-  },
+  "description": "This app is a small expense tracker",
+  "repository": "https://github.com/gitu/gocash",
+  "success_url": "/setup",
   "env": {
     "DB_CONF": "db",
     "DB_CONF_ENV": "production",
